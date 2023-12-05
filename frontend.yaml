@@ -1,0 +1,50 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-random
+spec:
+  ports:
+    - port: 5000
+      targetPort: 5000
+  selector:
+    app: web-random
+  type: LoadBalancer
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-random
+spec:
+  replicas: 3
+  strategy: 
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: web-random
+  template:
+    metadata:
+      labels:
+        app: web-random
+    spec:
+      containers:
+        - command:
+            - python
+            - ./app.py
+          env:
+            - name: MONGO_HOST
+              value: mongo
+          image: shik1801/image3:part7
+          name: web-random
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 5000
+          ports:
+            - containerPort: 5000
